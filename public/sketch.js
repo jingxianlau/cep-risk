@@ -1,256 +1,283 @@
 let gridSize = 8;
-let tileSize = 80;
+let tileSize = 60;
 let grid = [];
 let players = [];
 let currentPlayer = 0;
-let moveCount = 0;
-let draggingPawn = null;
-let previewTarget = null;
-let gameOver = false;
-let uiHeight = 100;
+let movePoints = 0;
+let maxPlayers = 4;
+let selectedTile = null;
+let dragging = false;
+let offsetX, offsetY;
 let pawnImg;
+let diceImg;
+let diceFrame = 0;
+let rollingDice = false;
+let rolledDice = false 
+let gameStarted = false;
+let events = [
+  { text: "Government subsidy received! +5 resources", effect: (p) => p.resources += 5 },
+  { text: "Corruption scandal! -3 public support", effect: (p) => p.support -= 3 },
+  { text: "Mass protest backs you! +4 public support", effect: (p) => p.support += 4 },
+  { text: "Black market arms deal! +3 resources", effect: (p) => p.resources += 3 },
+  { text: "Economic downturn. -2 resources", effect: (p) => p.resources -= 2 },
+  { text: "Community outreach success. +2 support", effect: (p) => p.support += 2 }
+];
+let currentEvent = "";
 
 function preload() {
-  pawnImg = loadImage(
-    'https://upload.wikimedia.org/wikipedia/commons/4/45/Chess_plt45.svg'
-  );
+  pawnImg = loadImage("https://upload.wikimedia.org/wikipedia/commons/4/45/Chess_plt45.svg");
 }
 
 function setup() {
-  createCanvas(gridSize * tileSize, gridSize * tileSize + uiHeight);
+  createCanvas(gridSize * tileSize, gridSize * tileSize + 120);
   initGrid();
   initPlayers();
-}
-
-function draw() {
-  background(255);
-  drawGrid();
-  drawUI();
-
-  if (draggingPawn) {
-    tint(255);
-    imageMode(CENTER);
-    image(pawnImg, mouseX, mouseY, 30, 30);
-  }
-
-  if (previewTarget && isTileNeutral(previewTarget.x, previewTarget.y)) {
-    let px = previewTarget.x * tileSize;
-    let py = previewTarget.y * tileSize + uiHeight;
-    fill(255, 255, 255, 100);
-    rect(px, py, tileSize, tileSize);
-    imageMode(CENTER);
-    tint(
-      players[currentPlayer].color.levels[0],
-      players[currentPlayer].color.levels[1],
-      players[currentPlayer].color.levels[2],
-      100
-    );
-    image(pawnImg, px + tileSize / 2, py + tileSize / 2, 30, 30);
-  }
+  startTurn();
 }
 
 function initGrid() {
-  for (let y = 0; y < gridSize; y++) {
+  for (let y = 0 ; y < gridSize; y++) {
     let row = [];
     for (let x = 0; x < gridSize; x++) {
       row.push({ faction: null, soldiers: 0 });
     }
     grid.push(row);
   }
-  grid[0][0] = { faction: 0, soldiers: 30 };
-  grid[0][gridSize - 1] = { faction: 1, soldiers: 30 };
-  grid[gridSize - 1][0] = { faction: 2, soldiers: 30 };
-  grid[gridSize - 1][gridSize - 1] = { faction: 3, soldiers: 30 };
+  // Initial spawn
+  grid[0][0].faction = 0; grid[0][0].soldiers = 5;
+  grid[0][gridSize - 1].faction = 1; grid[0][gridSize - 1].soldiers = 5;
+  grid[gridSize - 1][0].faction = 2; grid[gridSize - 1][0].soldiers = 5;
+  grid[gridSize - 1][gridSize - 1].faction = 3; grid[gridSize - 1][gridSize - 1].soldiers = 5;
 }
 
 function initPlayers() {
-  players = [
-    { name: 'Red Revolutionaries', color: color(255, 0, 0) },
-    { name: 'Green Guerrillas', color: color(0, 200, 0) },
-    { name: 'Blue Bloc', color: color(0, 0, 255) },
-    { name: 'Beige Brigadiers', color: color(210, 180, 140) }
-  ];
+  let names = ["Red Revolutionaries", "Blue Brigadiers", "Green Guerrillas", "Beige Battalion"];
+  let cols = ["red", "blue", "green", "tan"];
+  for (let i = 0; i < maxPlayers; i++) {
+    players.push({
+      name: names[i],
+      colour: cols[i],
+      manpower: 25,
+      resources: 25,
+      support: 10
+    });
+  }
 }
+
+function draw() {
+  background(255);
+  drawUI();
+  drawGrid();
+
+  if (dragging && selectedTile) {
+    image(pawnImg, mouseX - offsetX, mouseY - offsetY, 30, 30);
+  }
+}
+
+function drawUI() {
+  fill(0);
+  textSize(18);
+  let p = players[currentPlayer];
+  text(`${p.name}`, 10, 25);
+  text(`Manpower: ${p.manpower}`, 10, 50);
+  text(`Resources: ${p.resources}`, 10, 70);
+  text(`Public Support: ${p.support}`, 10, 90);
+  text(`Event: ${currentEvent}`, 250, 50);
+  if (movePoints === 0) text("Press SPACE to end turn", 250, 75);
+  else text(`Moves Left: ${movePoints}`, 250, 75);
+
+  // Dice display using emoji
+  textSize(32);
+  text("🎲", width - 120, 45);
+  textSize(20);
+  if (rollingDice) {
+    text(movePoints, width - 80, 50);
+  } else if (movePoints > 0) {
+    text(movePoints, width - 80, 50);
+  }
+
+  // Buy troops button
+  fill(200);
+  rect(width - 150, 80, 120, 30);
+  fill(0);
+  textSize(12);
+  text("Buy Troop (5 res)", width - 145, 100);
+}
+
 
 function drawGrid() {
   for (let y = 0; y < gridSize; y++) {
     for (let x = 0; x < gridSize; x++) {
       let tile = grid[y][x];
-      let px = x * tileSize;
-      let py = y * tileSize + uiHeight;
-
+      stroke(255);
       if (tile.faction !== null) {
-        fill(players[tile.faction].color);
+        fill(players[tile.faction].colour);
       } else {
         fill(0);
       }
-      stroke(255);
-      rect(px, py, tileSize, tileSize);
+      rect(x * tileSize, y * tileSize + 120, tileSize, tileSize);
 
       if (tile.soldiers > 0) {
-        drawPawns(tile.soldiers, px, py, tile.faction);
+        drawSoldiers(x, y, tile.soldiers, tile.faction);
       }
     }
   }
+
+  if (selectedTile) {
+    stroke(players[currentPlayer].colour);
+    strokeWeight(3);
+    noFill();
+    rect(selectedTile.x * tileSize, selectedTile.y * tileSize + 120, tileSize, tileSize); // <- Fixed +120
+    strokeWeight(1);
+  }
 }
 
-function drawPawns(count, px, py, faction) {
-  imageMode(CENTER);
-  let colour = players[faction].color;
-  tint(colour);
-  stroke(0);
-  let centerX = px + tileSize / 2;
-  let centerY = py + tileSize / 2;
+function drawSoldiers(x, y, count, faction) {
+  let cx = x * tileSize + tileSize / 2;
+  let cy = y * tileSize + 120 + tileSize / 2; // <- Fixed +120
 
   if (count > 5) {
-    image(pawnImg, centerX, centerY, 30, 30);
+    image(pawnImg, cx - 15, cy - 15, 30, 30);
     fill(0);
-    textSize(14);
+    textSize(12);
     textAlign(RIGHT, TOP);
-    text(count, px + tileSize - 5, py + 5);
+    text(count, x * tileSize + tileSize - 4, y * tileSize + 120 + 4); // <- Fixed +120
   } else {
-    let offset = 15;
     for (let i = 0; i < count; i++) {
       let angle = (TWO_PI / count) * i;
-      let x = centerX + cos(angle) * offset;
-      let y = centerY + sin(angle) * offset;
-      image(pawnImg, x, y, 30, 30);
+      let px = cx + cos(angle) * 10;
+      let py = cy + sin(angle) * 10;
+      image(pawnImg, px - 10, py - 10, 20, 20);
     }
   }
 }
 
-function drawUI() {
-  fill(240);
-  rect(0, 0, width, uiHeight);
-  fill(0);
-  textSize(16);
-  textAlign(LEFT, TOP);
-  let p = players[currentPlayer];
-  text(`Faction: ${p.name}`, 10, 10);
-  text(`Moves Left: ${5 - moveCount}`, 10, 30);
-
-  if (moveCount >= 5) {
-    text('No moves left. Press SPACE to end your turn.', 10, 60);
-  }
-}
 
 function mousePressed() {
-  if (mouseY < uiHeight || gameOver || moveCount >= 5) return;
-
+  if (dragging || movePoints <= 0) return;
   let x = floor(mouseX / tileSize);
-  let y = floor((mouseY - uiHeight) / tileSize);
-  if (!validCoord(x, y)) return;
+  let y = floor((mouseY - 120) / tileSize);
+  if (x >= gridSize || y >= gridSize || y < 0) return;
+
   let tile = grid[y][x];
   if (tile.faction === currentPlayer && tile.soldiers > 0) {
-    draggingPawn = { from: { x, y } };
+    selectedTile = { x, y };
+    offsetX = mouseX - (x * tileSize + tileSize / 2);
+    offsetY = mouseY - (y * tileSize + 120 + tileSize / 2);
+    dragging = true;
   }
 }
-
 function mouseReleased() {
-  if (!draggingPawn || gameOver || moveCount >= 5) return;
-
-  let x = floor(mouseX / tileSize);
-  let y = floor((mouseY - uiHeight) / tileSize);
-  if (!validCoord(x, y)) {
-    draggingPawn = null;
-    previewTarget = null;
+  if (!dragging || !selectedTile || movePoints <= 0) return;
+  let toX = floor(mouseX / tileSize);
+  let toY = floor((mouseY - 120) / tileSize);
+  if (toX >= gridSize || toY >= gridSize || toY < 0) {
+    dragging = false;
     return;
   }
 
-  let from = draggingPawn.from;
-  let to = { x, y };
+  let fromTile = grid[selectedTile.y][selectedTile.x];
+  let toTile = grid[toY][toX];
 
-  if (!isAdjacent(from, to)) {
-    draggingPawn = null;
-    previewTarget = null;
+  if (!isAdjacent(selectedTile, { x: toX, y: toY })) {
+    dragging = false;
+    selectedTile = null;
     return;
   }
 
-  let fromTile = grid[from.y][from.x];
-  let toTile = grid[to.y][to.x];
-
-  if (toTile.faction === null || toTile.faction === currentPlayer) {
+  if (toTile.faction === null) {
+    toTile.faction = currentPlayer;
+    toTile.soldiers = 1;
     fromTile.soldiers--;
-    if (fromTile.soldiers === 0) fromTile.faction = null;
-
-    if (toTile.faction === null) {
-      toTile.faction = currentPlayer;
-    }
+  } else if (toTile.faction === currentPlayer) {
     toTile.soldiers++;
-    moveCount++;
-  } else {
-    // 50% chance of attacker or defender surviving
-    let attackerWins = random() < 0.5;
-
     fromTile.soldiers--;
-    if (fromTile.soldiers === 0) fromTile.faction = null;
-
-    if (attackerWins) {
-      toTile.soldiers--;
-      if (toTile.soldiers === 0) {
-        toTile.faction = currentPlayer;
-        toTile.soldiers = 1;
-      }
-    } else {
-      // defender survives, no change needed
+  } else {
+    toTile.soldiers--;
+    fromTile.soldiers--;
+    if (toTile.soldiers <= 0) {
+      toTile.faction = null;
+      toTile.soldiers = 0;
     }
-
-    moveCount++;
   }
 
-  draggingPawn = null;
-  previewTarget = null;
+  if (fromTile.soldiers <= 0) {
+    fromTile.faction = null;
+  }
+
+  dragging = false;
+  selectedTile = null;
+  movePoints--;
 }
 
-function mouseMoved() {
-  if (!draggingPawn || gameOver || moveCount >= 5) {
-    previewTarget = null;
-    return;
-  }
 
-  let x = floor(mouseX / tileSize);
-  let y = floor((mouseY - uiHeight) / tileSize);
-  if (validCoord(x, y)) {
-    previewTarget = { x, y };
-  } else {
-    previewTarget = null;
-  }
+function isAdjacent(a, b) {
+  let dx = abs(a.x - b.x);
+  let dy = abs(a.y - b.y);
+  return dx <= 1 && dy <= 1 && (dx + dy > 0);
 }
 
 function keyPressed() {
-  if (key === ' ' && !gameOver) {
-    moveCount = 0;
-    currentPlayer = (currentPlayer + 1) % players.length;
-    checkVictory();
+  if (key === ' ' && movePoints === 0 && gameStarted) {
+    currentPlayer = (currentPlayer + 1) % maxPlayers;
+    startTurn();
   }
-}
+  if (key === 'r' && !rollingDice && gameStarted && rolledDice == false) {
+    rollingDice = true;
+    rolledDice = true;
+  }
+  if (key === 'b') {
+  let player = players[currentPlayer];
+  if (player.resources >= 5 && player.manpower > 0) {
+    player.resources -= 5;
+    player.manpower--;
 
-function validCoord(x, y) {
-  return x >= 0 && x < gridSize && y >= 0 && y < gridSize;
-}
+    // Find tiles owned by player with max soldiers
+    let ownedTiles = [];
+    let maxSoldiers = 0;
 
-function isTileNeutral(x, y) {
-  return grid[y][x].faction === null;
-}
-
-function isAdjacent(a, b) {
-  let dx = Math.abs(a.x - b.x);
-  let dy = Math.abs(a.y - b.y);
-  return dx <= 1 && dy <= 1 && dx + dy > 0;
-}
-
-function checkVictory() {
-  let alive = new Set();
-  for (let row of grid) {
-    for (let tile of row) {
-      if (tile.soldiers > 0 && tile.faction !== null) {
-        alive.add(tile.faction);
+    for (let y = 0; y < gridSize; y++) {
+      for (let x = 0; x < gridSize; x++) {
+        let tile = grid[y][x];
+        if (tile.faction === currentPlayer) {
+          if (tile.soldiers > maxSoldiers) {
+            maxSoldiers = tile.soldiers;
+            ownedTiles = [{ x, y }];
+          } else if (tile.soldiers === maxSoldiers) {
+            ownedTiles.push({ x, y });
+          }
+        }
       }
     }
+
+    if (ownedTiles.length > 0) {
+      // Randomly select one tile among the max
+      let chosen = random(ownedTiles);
+      grid[chosen.y][chosen.x].soldiers++;
+    } else {
+      // No owned tiles?? (shouldn't happen unless they lost everything)
+      alert("No controlled tiles to place a troop!");
+    }
   }
-  if (alive.size === 1) {
-    gameOver = true;
-    let winner = Array.from(alive)[0];
-    alert(`${players[winner].name} has won the revolution!`);
+}
+
+}
+
+function keyReleased() {
+  if (key === 'r' && rollingDice) {
+    rollingDice = false;
+    movePoints = floor(random(1, 7));
   }
+}
+
+
+function startTurn() {
+  gameStarted = true;
+  rolledDice = false; 
+  let player = players[currentPlayer];
+  let event = random(events);
+  currentEvent = event.text;
+  event.effect(player);
+  player.resources += floor(player.support / 2);
+  movePoints = 0;
 }
