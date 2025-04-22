@@ -1,4 +1,11 @@
-const territories = [];
+let territories = [];
+
+const econBonuses = [
+  1.4, 0.7, 0.6, 0.7, 1.5, 1.3, 0.8, 1.5, 1.5, 1, 1.1, 0.6, 0.5, 1.1, 0.7, 1,
+  0.9, 0.7, 1.3, 1.4, 0.8, 1.5, 1, 1, 1.1, 0.9, 1, 0.9, 0.8, 0.9, 1, 1, 1.1, 1,
+  1, 0.9, 0.9, 1.1, 1.2, 1.1
+];
+
 const conn = [
   // adjacency list of territory ids and connections
   [1, 3],
@@ -42,3 +49,7 @@ const conn = [
   [29, 33, 37],
   [37]
 ];
+
+for (let i = 0; i < conn.length; i++) {
+  territories.push(new Territory(i, econBonuses[i]));
+}
