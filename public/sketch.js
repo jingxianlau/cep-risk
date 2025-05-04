@@ -1,4 +1,3 @@
-
 // === Merged Revolution Strategy Game ===
 
 let gridSize = 8;
@@ -8,6 +7,7 @@ let players = [];
 let currentPlayer = 0;
 let moveCount = 0;
 let draggingPawn = null;
+let hasDragged = false;
 let previewTarget = null;
 let gameOver = false;
 let uiHeight = 100;
@@ -36,6 +36,15 @@ function setup() {
   initGrid();
 }
 
+function initPlayers() {
+  players = [
+    { name: "Red Revolutionaries", color: color(255, 0, 0), money: 100, polSupport: 0.5, manpower: 0 },
+    { name: "Green Guerrillas", color: color(0, 200, 0), money: 100, polSupport: 0.5 , manpower: 0 },
+    { name: "Blue Bloc", color: color(0, 0, 255), money: 100, polSupport: 0.5, manpower: 0 },
+    { name: "Beige Brigadiers", color: color(210, 180, 140), money: 100, polSupport: 0.5 , manpower: 0 }
+  ];
+}
+
 function draw() {
   background(255);
   drawGrid();
@@ -47,8 +56,24 @@ function draw() {
     image(pawnImg, mouseX, mouseY, 30, 30);
   }
 
-  if (previewTarget && isTileNeutral(previewTarget.x, previewTarget.y)) {
+  if (
+  draggingPawn &&
+  previewTarget &&
+  validCoord(previewTarget.x, previewTarget.y) &&
+  isAdjacent(draggingPawn.from, previewTarget)
+) {
+  const toTile = grid[previewTarget.y][previewTarget.x];
+  const fromTile = grid[draggingPawn.from.y][draggingPawn.from.x];
+  if (toTile.faction === null || toTile.faction === currentPlayer || toTile.faction !== currentPlayer) {
     let px = previewTarget.x * tileSize;
+    let py = previewTarget.y * tileSize + uiHeight;
+    let tintColor = (toTile.faction === null || toTile.faction === currentPlayer) ? color(0, 255, 0, 100) : color(255, 0, 0, 100);
+    fill(tintColor);
+    rect(px, py, tileSize, tileSize);
+    imageMode(CENTER);
+    tint(players[currentPlayer].color.levels[0], players[currentPlayer].color.levels[1], players[currentPlayer].color.levels[2], 100);
+    image(pawnImg, px + tileSize / 2, py + tileSize / 2, 30, 30);
+  }
     let py = previewTarget.y * tileSize + uiHeight;
     fill(255, 255, 255, 100);
     rect(px, py, tileSize, tileSize);
@@ -56,6 +81,75 @@ function draw() {
     tint(players[currentPlayer].color.levels[0], players[currentPlayer].color.levels[1], players[currentPlayer].color.levels[2], 100);
     image(pawnImg, px + tileSize / 2, py + tileSize / 2, 30, 30);
   }
+
+}
+
+function mousePressed() {
+  if (mouseY < uiHeight || gameOver || moveCount >= 5) return;
+  let x = floor(mouseX / tileSize);
+  let y = floor((mouseY - uiHeight) / tileSize);
+  if (!validCoord(x, y)) return;
+  let tile = grid[y][x];
+  if (tile.faction === currentPlayer && tile.troops > 0) {
+    draggingPawn = { from: { x, y } };
+    hasDragged = false;
+  }
+}
+
+function mouseDragged() {
+  if (draggingPawn) {
+    hasDragged = true;
+  }
+}
+
+function mouseReleased() {
+  if (!draggingPawn || !hasDragged || gameOver || moveCount >= 5) {
+    draggingPawn = null;
+    previewTarget = null;
+    return;
+  }
+  let x = floor(mouseX / tileSize);
+  let y = floor((mouseY - uiHeight) / tileSize);
+  if (!validCoord(x, y)) return;
+
+  let from = draggingPawn.from;
+  let to = { x, y };
+  if (!isAdjacent(from, to)) return;
+
+  let fromTile = grid[from.y][from.x];
+  let toTile = grid[to.y][to.x];
+
+  fromTile.troops--;
+  if (fromTile.troops === 0) fromTile.faction = null;
+
+  if (toTile.troops === 0 || toTile.faction === currentPlayer) {
+    if (toTile.faction === null) toTile.faction = currentPlayer;
+    toTile.troops++;
+  } else {
+    toTile.anger[fromTile.faction]++;
+    if (random() < 0.5) {
+      toTile.troops--;
+      if (toTile.troops === 0) {
+        toTile.faction = currentPlayer;
+        toTile.troops = 1;
+        toTile.support = 0.75 * (1 - toTile.support);
+      }
+    }
+  }
+  moveCount++;
+  draggingPawn = null;
+  previewTarget = null;
+  hasDragged = false;
+}
+
+function mouseMoved() {
+  if (draggingPawn || gameOver || moveCount >= 5) {
+    previewTarget = null;
+    return;
+  }
+  let x = floor(mouseX / tileSize);
+  let y = floor((mouseY - uiHeight) / tileSize);
+  previewTarget = validCoord(x, y) ? { x, y } : null;
 }
 
 function initGrid() {
@@ -84,16 +178,7 @@ function initGrid() {
   grid[gridSize - 1][0].troops = 30;
   grid[gridSize - 1][gridSize - 1].faction = 3;
   grid[gridSize - 1][gridSize - 1].troops = 30;
-}
-
-function initPlayers() {
-  players = [
-    { name: "Red Revolutionaries", color: color(255, 0, 0), money: 100, polSupport: 0.5, manpower: 0 },
-    { name: "Green Guerrillas", color: color(0, 200, 0), money: 100, polSupport: 0.5 , manpower: 0 },
-    { name: "Blue Bloc", color: color(0, 0, 255), money: 100, polSupport: 0.5, manpower: 0 },
-    { name: "Beige Brigadiers", color: color(210, 180, 140), money: 100, polSupport: 0.5 , manpower: 0 }
-  ];
-}
+} 
 
 function drawGrid() {
   for (let y = 0; y < gridSize; y++) {
@@ -164,62 +249,6 @@ function drawUI() {
   text('🎲', width - 120, 10);
   textSize(20);
   text(rollingDice ? '...' : 5 - moveCount, width - 80, 20);
-}
-
-function mousePressed() {
-  if (mouseY < uiHeight || gameOver || moveCount >= 5) return;
-  let x = floor(mouseX / tileSize);
-  let y = floor((mouseY - uiHeight) / tileSize);
-  if (!validCoord(x, y)) return;
-  let tile = grid[y][x];
-  if (tile.faction === currentPlayer && tile.troops > 0) {
-    draggingPawn = { from: { x, y } };
-  }
-}
-
-function mouseReleased() {
-  if (!draggingPawn || gameOver || moveCount >= 5) return;
-  let x = floor(mouseX / tileSize);
-  let y = floor((mouseY - uiHeight) / tileSize);
-  if (!validCoord(x, y)) return;
-
-  let from = draggingPawn.from;
-  let to = { x, y };
-  if (!isAdjacent(from, to)) return;
-
-  let fromTile = grid[from.y][from.x];
-  let toTile = grid[to.y][to.x];
-
-  fromTile.troops--;
-  if (fromTile.troops === 0) fromTile.faction = null;
-
-  if (toTile.troops === 0 || toTile.faction === currentPlayer) {
-    if (toTile.faction === null) toTile.faction = currentPlayer;
-    toTile.troops++;
-  } else {
-    toTile.anger[fromTile.faction]++;
-    if (random() < 0.5) {
-      toTile.troops--;
-      if (toTile.troops === 0) {
-        toTile.faction = currentPlayer;
-        toTile.troops = 1;
-        toTile.support = 0.75 * (1 - toTile.support);
-      }
-    }
-  }
-  moveCount++;
-  draggingPawn = null;
-  previewTarget = null;
-}
-
-function mouseMoved() {
-  if (!draggingPawn || gameOver || moveCount >= 5) {
-    previewTarget = null;
-    return;
-  }
-  let x = floor(mouseX / tileSize);
-  let y = floor((mouseY - uiHeight) / tileSize);
-  previewTarget = validCoord(x, y) ? { x, y } : null;
 }
 
 function keyPressed() {
