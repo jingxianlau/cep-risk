@@ -1,8 +1,26 @@
-html,
-body {
-  margin: 0;
-  padding: 0;
+#ussr-map path.in {
+  fill: orange;
+  cursor: pointer;
 }
-canvas {
-  display: block;
+
+#ussr-map path {
+  display: inline;
+  fill: #ffffff;
+  fill-opacity: 1;
+  stroke: #000000;
+  stroke-width: 0.265;
+  stroke-opacity: 1;
+  transition: 0.3s;
+}
+
+#ussr-map {
+  position: absolute;
+  left: 0px;
+  top: 0px;
+}
+
+#bg {
+  position: absolute;
+  left: 0px;
+  top: 0px;
 }
