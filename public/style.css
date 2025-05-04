@@ -24,3 +24,9 @@
   left: 0px;
   top: 0px;
 }
+
+body > main {
+  position: absolute;
+  left: 0px;
+  top: 0px;
+}
