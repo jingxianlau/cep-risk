@@ -1,12 +1,14 @@
+let bgDiv, mapDiv, doc;
 function preload() {
-  let bgDiv = createDiv('');
-  let mapDiv = createDiv('');
+  bgDiv = createDiv('');
+  mapDiv = createDiv('');
   bgDiv.html(bg);
   mapDiv.html(map);
+  doc = document.getElementById('ussr-map');
 }
 
 function setup() {
-  createCanvas(windowWidth - 15, 0.61853 * windowWidth - 25);
+  createCanvas(doc.clientWidth, doc.clientHeight);
   document.querySelectorAll('#ussr-map path').forEach(e => {
     e.onmouseenter = () => {
       e.classList.add('in');
@@ -17,4 +19,19 @@ function setup() {
   });
 }
 
-function draw() {}
+function windowResized() {
+  resizeCanvas(doc.clientWidth, doc.clientHeight);
+}
+
+function draw() {
+  clear();
+  for (let i = 0; i < territories.length; i++) {
+    noStroke();
+    textAlign(CENTER, CENTER);
+    text(
+      i + 1,
+      territories[i].coords.x * doc.clientWidth,
+      territories[i].coords.y * doc.clientHeight
+    );
+  }
+}
