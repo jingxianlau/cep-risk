@@ -1,7 +1,8 @@
-function setup() {
-  createCanvas(400, 400);
-}
-
-function draw() {
-  background(220);
-}
+document.querySelectorAll('#ussr-map path').forEach(e => {
+  e.onmouseenter = () => {
+    e.classList.add('in');
+  }
+  e.onmouseleave = () => {
+    e.classList.remove('in');
+  }
+})
