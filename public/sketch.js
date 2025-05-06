@@ -145,6 +145,7 @@ function initPlayers() {
 }
 
 function draw() {
+  // territory colours
   for (let i = 0; i < territories.length; i++) {
     document.getElementById(territories[i].id + 1).style.fill =
       territories[i].colour;
@@ -171,6 +172,22 @@ function draw() {
 }
 
 function drawMap() {
+  strokeWeight(3);
+  stroke('black');
+  drawingContext.setLineDash([1, 5]);
+  line(
+    0.12 * doc.clientWidth,
+    0.63 * doc.clientHeight,
+    0.152 * doc.clientWidth,
+    0.63 * doc.clientHeight
+  );
+  line(
+    0.12 * doc.clientWidth,
+    0.65 * doc.clientHeight,
+    0.135 * doc.clientWidth,
+    0.69 * doc.clientHeight
+  );
+
   for (let t of territories) {
     drawPawns(t);
   }
@@ -202,7 +219,7 @@ function drawPawns(t) {
     // textAlign(LEFT, TOP);
     calcRevenue(t);
     // textAlign(CENTER, CENTER);
-    text((t.revenue < 0 ? '-$' : '$') + abs(t.revenue), centerX, centerY - 30);
+    // text((t.revenue < 0 ? '-$' : '$') + abs(t.revenue), centerX, centerY - 30);
 
     fill('#222');
     noStroke();
@@ -365,7 +382,13 @@ function mousePressed() {
 }
 
 function mouseReleased() {
-  if (draggingPawn === null || hovered === null || gameOver || moveCount >= 5) {
+  if (
+    draggingPawn === null ||
+    territories[draggingPawn].faction !== currentPlayer ||
+    hovered === null ||
+    gameOver ||
+    moveCount >= 5
+  ) {
     draggingPawn = null;
     previewTarget = null;
     return;
