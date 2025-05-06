@@ -47,6 +47,12 @@ function preload() {
 function setup() {
   createCanvas(doc.clientWidth, doc.clientHeight);
 
+  window.addEventListener('keydown', e => {
+    if (e.key === ' ' && e.target === document.body) {
+      e.preventDefault();
+    }
+  });
+
   document.querySelectorAll('#ussr-map path').forEach(e => {
     e.onmouseenter = () => {
       e.classList.add('in');
