@@ -49,11 +49,17 @@ function setup() {
 
   document.querySelectorAll('#ussr-map path').forEach(e => {
     e.onmouseenter = () => {
-      // territories[e.id - 1].colour = 'orange';
+      e.classList.add('in');
       e.style.cursor = 'pointer';
+
+      if (draggingPawn !== null && !conn[draggingPawn].includes(e.id - 1)) {
+        e.style.cursor = 'not-allowed';
+      }
+
       hovered = e.id - 1;
     };
     e.onmouseleave = () => {
+      e.classList.remove('in');
       let f = territories[e.id - 1].faction;
       if (draggingPawn !== null) {
         if (!conn[draggingPawn].includes(e.id - 1)) {
@@ -67,7 +73,11 @@ function setup() {
         territories[e.id - 1].colour = f !== null ? players[f].color : 'white';
       }
       e.style.cursor = 'default';
+
       hovered = null;
+    };
+    e.onmouseup = () => {
+      e.style.cursor = 'pointer';
     };
   });
   initPlayers();
@@ -111,12 +121,42 @@ function initPlayers() {
     territories[0].faction !== null
       ? players[territories[0].faction].color
       : 'white';
+
+  territories[32].faction = 1;
+  territories[32].troops = 5;
+  territories[32].colour =
+    territories[32].faction !== null
+      ? players[territories[32].faction].color
+      : 'white';
+
+  territories[35].faction = 2;
+  territories[35].troops = 5;
+  territories[35].colour =
+    territories[35].faction !== null
+      ? players[territories[35].faction].color
+      : 'white';
+
+  territories[12].faction = 3;
+  territories[12].troops = 5;
+  territories[12].colour =
+    territories[12].faction !== null
+      ? players[territories[12].faction].color
+      : 'white';
 }
 
 function draw() {
   for (let i = 0; i < territories.length; i++) {
     document.getElementById(territories[i].id + 1).style.fill =
       territories[i].colour;
+
+    if (territories[i].colour == 'green') {
+      const f = territories[i].faction;
+      document.getElementById(territories[i].id + 1).style.fill =
+        f !== null ? players[f].color : 'white';
+      document.getElementById(territories[i].id + 1).classList.add('tint');
+    } else {
+      document.getElementById(territories[i].id + 1).classList.remove('tint');
+    }
   }
 
   clear();
@@ -126,7 +166,7 @@ function draw() {
   if (draggingPawn !== null) {
     tint(255);
     imageMode(CENTER);
-    image(pawnImg, mouseX - 15, mouseY - 15, 50, 50);
+    image(pawnImg, mouseX, mouseY, 50, 50);
   }
 }
 
@@ -160,9 +200,9 @@ function drawPawns(t) {
   if (t.faction !== null) {
     fill(0);
     // textAlign(LEFT, TOP);
-    // calcRevenue(t);
+    calcRevenue(t);
     // textAlign(CENTER, CENTER);
-    // text((t.revenue < 0 ? '-$' : '$') + abs(t.revenue), centerX, centerY - 30);
+    text((t.revenue < 0 ? '-$' : '$') + abs(t.revenue), centerX, centerY - 30);
 
     fill('#222');
     noStroke();
@@ -253,13 +293,10 @@ function keyReleased() {
 
 function payout() {
   let amt = 0;
-  for (let y = 0; y < 8; y++) {
-    for (let x = 0; x < 8; x++) {
-      if (grid[y][x].faction == currentPlayer) {
-        players[grid[y][x].faction].money += grid[y][x].revenue;
-        amt += grid[y][x].revenue;
-        grid[y][x].anger = grid[y][x].anger.map(a => max(0, a - 1));
-      }
+  for (let t of territories) {
+    if (t.faction == currentPlayer) {
+      players[t.faction].money += t.revenue;
+      amt += t.revenue;
     }
   }
   return amt;
@@ -267,12 +304,10 @@ function payout() {
 
 function manpowergain() {
   let men = 0;
-  for (let y = 0; y < 8; y++) {
-    for (let x = 0; x < 8; x++) {
-      if (grid[y][x].faction == currentPlayer) {
-        players[grid[y][x].faction].manpower += grid[y][x].manpower;
-        men += grid[y][x].revenue;
-      }
+  for (let t of territories) {
+    if (t.faction == currentPlayer) {
+      players[t.faction].manpower += t.manpower;
+      men += t.manpower;
     }
   }
   return men;
@@ -340,7 +375,8 @@ function mouseReleased() {
   let to = hovered;
 
   for (let loc of conn[draggingPawn]) {
-    territories[loc].colour = 'white';
+    const f = territories[loc].faction;
+    territories[loc].colour = f !== null ? players[f].color : 'white';
   }
   draggingPawn = null;
   if (!validCoord(hovered)) return;
@@ -348,13 +384,18 @@ function mouseReleased() {
 
   let fromTile = territories[from];
   let toTile = territories[to];
+  let fac = fromTile.faction;
 
   fromTile.troops--;
-  if (fromTile.troops === 0) fromTile.faction = null;
+  if (fromTile.troops === 0) {
+    fromTile.faction = null;
+    fromTile.colour = 'white';
+  }
 
   if (toTile.troops === 0 || toTile.faction === currentPlayer) {
     if (toTile.faction === null) toTile.faction = currentPlayer;
     toTile.troops++;
+    toTile.colour = fac !== null ? players[fac].color : 'white';
   } else {
     if (random() < 0.5) {
       toTile.troops--;
@@ -362,7 +403,8 @@ function mouseReleased() {
         toTile.faction = currentPlayer;
         toTile.troops = 1;
         toTile.support = 0.75 * (1 - toTile.support);
-        toTile.colour = players[fromTile.faction].color;
+        console.log(fac);
+        toTile.colour = fac !== null ? players[fac].color : 'white';
       }
     }
   }

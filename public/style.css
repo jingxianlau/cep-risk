@@ -8,6 +8,15 @@
   transition: 0.3s;
 }
 
+#ussr-map path.tint {
+  filter: brightness(90%);
+  stroke-width: 0.5;
+}
+
+#ussr-map path.in {
+  filter: brightness(80%);
+}
+
 #ussr-map {
   position: absolute;
   left: 0px;
