@@ -55,6 +55,7 @@ function setup() {
   territoryMenu.style('border-radius', '5px');
   territoryMenu.style('display', 'none');
   territoryMenu.style('pointer-events', 'none');
+  territoryMenu.style('z-index', '1');
 
   window.addEventListener('keydown', e => {
     if (e.key === ' ' && e.target === document.body) {
@@ -72,18 +73,13 @@ function setup() {
       }
 
       hovered = e.id - 1;
-      const t = territories[hovered];
-    territoryMenu.html(`
-      <strong>Faction:</strong> ${t.faction !== null ? players[t.faction].name : 'Neutral'}<br>
-      <strong>Troops:</strong> ${t.troops}<br>
-      <strong>Revenue:</strong> $${t.revenue || 0}<br>
-      <strong>Support:</strong> ${(t.support * 100).toFixed(1)}%<br>
-      ${t.faction === currentPlayer ? '<strong>Press B to build a troop</strong>' : ''}
-    `);
-    territoryMenu.style('display', 'block');
-    territoryMenu.position(mouseX + 10, mouseY + 10);
-      
+
+      reloadTerritoryMenu();
+      if (draggingPawn === null) {
+        territoryMenu.style('display', 'block');
+      }
     };
+
     e.onmouseleave = () => {
       e.classList.remove('in');
       let f = territories[e.id - 1].faction;
@@ -108,6 +104,45 @@ function setup() {
     };
   });
   initPlayers();
+}
+
+function reloadTerritoryMenu() {
+  if (hovered === null) return;
+  let t = territories[hovered];
+  territoryMenu.html(`
+    <span style="font-size: 18px;"><strong>${t.name}</strong></span>
+    <span style="font-size: 18px;">(${t.econ}x)</span><br>
+
+    ${
+      t.faction !== null
+        ? `
+            <span style="font-size: 14px;">(${
+              t.faction !== null ? players[t.faction].name : 'Neutral'
+            })</span><br>
+            <div style='height: 7px'></div>
+            <strong>Revenue:</strong> ${
+              t.revenue < 0 ? `-$${-t.revenue}` : `$${t.revenue}`
+            } 
+            <span style="font-size: 12px;">(${t.econ}x)</span><br>
+            <strong>Support:</strong> ${
+              (t.support * 100).toFixed(1) == '-0.0'
+                ? '0'
+                : (t.support * 100).toFixed(1)
+            }%<br>
+          `
+        : ''
+    }
+
+    ${
+      t.faction === currentPlayer
+        ? `
+            <div style='height: 7px'></div>
+            <i>[B] Deploy Troop ($5)</i>
+          `
+        : ''
+    }
+  `);
+  territoryMenu.position(mouseX + 10, mouseY + 10);
 }
 
 function initPlayers() {
@@ -229,8 +264,14 @@ function drawPawns(t) {
     image(pawnImg, centerX, centerY, 30, 30);
     fill(0);
     textSize(14);
-    textAlign(RIGHT, TOP);
-    text(t.troops, centerX + 50 - 5, centerY + 5);
+    textAlign(LEFT, TOP);
+    textStyle(BOLD);
+    noStroke();
+    fill('white');
+    text(t.troops, centerX + 10, centerY);
+    textStyle(NORMAL);
+  } else if (t.troops === 1) {
+    image(pawnImg, centerX, centerY, 30, 30);
   } else {
     let offset = 15;
     for (let i = 0; i < t.troops; i++) {
@@ -277,9 +318,6 @@ function drawUI() {
   text('🎲', doc.clientWidth - 120, 40);
   textSize(20);
   text(rollingDice ? '...' : 5 - moveCount, doc.clientWidth - 80, 40);
-
-
-
 }
 
 function keyPressed() {
@@ -289,7 +327,7 @@ function keyPressed() {
     currentPlayer = (currentPlayer + 1) % players.length;
     const event = random(events);
     currentEvent = event.text;
-    event.effect(player);
+    event.effect(currentPlayer);
     checkVictory();
     payout();
     manpowergain();
@@ -299,13 +337,20 @@ function keyPressed() {
   //   rollingDice = true;
   //   rolledDice = true;
   // }
-  if (key === 'b' && !gameOver && territories[hovered].faction === currentPlayer) {
-    console.log(territories[hovered].faction);
-    const player = players[currentPlayer]; 
-    if (territories[hovered].troops > 0 && player.money >= 5 && player.manpower > 0) {
+  if (
+    key === 'b' &&
+    !gameOver &&
+    territories[hovered].faction === currentPlayer
+  ) {
+    const player = players[currentPlayer];
+    if (
+      territories[hovered].troops > 0 &&
+      player.money >= 5 &&
+      player.manpower > 0
+    ) {
       territories[hovered].troops += 1;
-      player.money -= 5; 
-      player.manpower -= 1; 
+      player.money -= 5;
+      player.manpower -= 1;
     }
   }
 }
@@ -346,6 +391,7 @@ function calcRevenue(tile) {
   rawSupport = constrain(rawSupport, -1, 1);
   tile.support = rawSupport;
   tile.revenue = round((50 + tile.support * 250) * tile.econ);
+  reloadTerritoryMenu();
 }
 
 function isTileNeutral(a) {
@@ -389,6 +435,7 @@ function mousePressed() {
     for (let loc of conn[hovered]) {
       territories[loc].colour = 'green';
     }
+    territoryMenu.style('display', 'none');
   }
 }
 
@@ -413,6 +460,7 @@ function mouseReleased() {
     territories[loc].colour = f !== null ? players[f].color : 'white';
   }
   draggingPawn = null;
+  territoryMenu.style('display', 'block');
   if (!validCoord(hovered)) return;
   if (!isAdjacent(from, to)) return;
 

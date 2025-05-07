@@ -1,8 +1,49 @@
 let territories = [];
 
+const names = [
+  'Baltic SSRs',
+  'Belorussian SSR',
+  'Ukrainian SSR',
+  'Kalmykskaya ASSR',
+  'Armenian SSR',
+  'Leningrad Region',
+  'Moscow Region',
+  'Far East Region',
+  'Volgograd Region',
+  "Karel'skaya ASSR",
+  "Arkhangel'sk",
+  'West Kazakh SSR',
+  'Turkmen & Uzbek SSR',
+  'North Kazakh SSR',
+  'South Kazakh SSR',
+  'Kirghiz & Tajik SSR',
+  'Bashkirskaya ASSR',
+  'Komi ASSR',
+  'Yamalo-Nenetskiy',
+  'Khanty-Mansiyskiy',
+  'Tyumen & Omsk',
+  'Tomsk & Novosibirsk',
+  'Altayskiy Kray',
+  'Taymyrskiy',
+  'South Krasnoyarskiy',
+  'North Krasnoyarskiy',
+  'North Yakutskaya ASSR',
+  'South Yakutskaya ASSR',
+  'Irkutsk Region',
+  'Tuvinskaya ASSR',
+  'Buryatskaya ASSR',
+  'Chita Region',
+  'Chukotskiy',
+  "Kamohatskaya Oblast'",
+  'Magadan Region',
+  'Khabarovskiy Kray',
+  "Amurskaya Oblast'",
+  'Primorskiy Kray'
+];
+
 const econBonuses = [
-  0.6, 0.7, 1.5, 1.3, 0.8, 1.5, 1.5, 1, 1.1, 0.6, 0.5, 1.1, 0.7, 1, 0.9, 0.7,
-  1.3, 1.4, 0.8, 1.5, 1, 1, 1.1, 0.9, 1, 0.9, 0.8, 0.9, 1, 1, 1.1, 1, 1, 0.9,
+  0.6, 0.7, 1.5, 1.3, 0.8, 1.5, 1.5, 1, 1.1, 0.6, 0.5, 1.1, 1.5, 1, 0.9, 0.7,
+  1.3, 0.8, 0.8, 1.5, 1, 1, 1.1, 0.9, 1, 0.9, 0.8, 0.9, 1, 1, 1.1, 1, 1, 0.9,
   0.9, 1.1, 1.2, 1.1
 ];
 
@@ -90,5 +131,5 @@ const conn = [
 ];
 
 for (let i = 0; i < conn.length; i++) {
-  territories.push(new Territory(i, coords[i], econBonuses[i]));
+  territories.push(new Territory(names[i], i, coords[i], econBonuses[i]));
 }

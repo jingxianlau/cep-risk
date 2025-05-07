@@ -1,5 +1,6 @@
 class Territory {
-  constructor(id, coords, econ) {
+  constructor(n, id, coords, econ) {
+    this.name = n;
     this.id = id;
     this.coords = coords;
     this.faction = null;
