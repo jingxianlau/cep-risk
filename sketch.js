@@ -340,7 +340,7 @@ function keyPressed() {
     ) {
       territories[hovered].troops += 1;
       player.money -= 150;
-      player.manpower -= 5;
+      player.manpower -= 3;
     }
   }
 }
