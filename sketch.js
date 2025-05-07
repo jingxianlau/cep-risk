@@ -135,7 +135,7 @@ function reloadTerritoryMenu() {
       t.faction === currentPlayer
         ? `
             <div style='height: 7px'></div>
-            <i>[B] Deploy Troop ($5)</i>
+            <i>[B] Deploy Troop ($150)</i>
           `
         : ''
     }
@@ -335,12 +335,12 @@ function keyPressed() {
     const player = players[currentPlayer];
     if (
       territories[hovered].troops > 0 &&
-      player.money >= 5 &&
-      player.manpower > 0
+      player.money >= 150 &&
+      player.manpower > 4
     ) {
       territories[hovered].troops += 1;
-      player.money -= 5;
-      player.manpower -= 1;
+      player.money -= 150;
+      player.manpower -= 5;
     }
   }
 }
