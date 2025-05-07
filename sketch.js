@@ -339,8 +339,8 @@ function keyPressed() {
     const player = players[currentPlayer];
     if (
       territories[hovered].troops > 0 &&
-      player.money >= 150 &&
-      player.manpower > 2
+      player.money >= player.troopCost &&
+      player.manpower
     ) {
       territories[hovered].troops += 1;
       player.money -= player.troopCost;
