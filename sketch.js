@@ -135,7 +135,7 @@ function reloadTerritoryMenu() {
       t.faction === currentPlayer
         ? `
             <div style='height: 7px'></div>
-            <i>[B] Deploy Troop ($5)</i>
+            <i>[B] Deploy Troop ($${players[currentPlayer].troopCost})</i>
           `
         : ''
     }
@@ -150,28 +150,36 @@ function initPlayers() {
       color: color(255, 0, 0),
       money: 100,
       polSupport: 0.5,
-      manpower: 3
+      manpower: 3,
+      troopsBought: 0,
+      troopCost: 150
     },
     {
       name: 'Green Guerrillas',
       color: color(0, 200, 0),
       money: 100,
       polSupport: 0.5,
-      manpower: 0
+      manpower: 0,
+      troopsBought: 0,
+      troopCost: 150
     },
     {
       name: 'Blue Bloc',
       color: color(0, 0, 255),
       money: 100,
       polSupport: 0.5,
-      manpower: 0
+      manpower: 0,
+      troopsBought: 0,
+      troopCost: 150
     },
     {
       name: 'Beige Brigadiers',
       color: color(210, 180, 140),
       money: 100,
       polSupport: 0.5,
-      manpower: 0
+      manpower: 0,
+      troopsBought: 0,
+      troopCost: 150
     }
   ];
 
@@ -335,12 +343,14 @@ function keyPressed() {
     const player = players[currentPlayer];
     if (
       territories[hovered].troops > 0 &&
-      player.money >= 5 &&
-      player.manpower > 0
+      player.money >= 150 &&
+      player.manpower > 2
     ) {
       territories[hovered].troops += 1;
-      player.money -= 5;
-      player.manpower -= 1;
+      player.troopCost += 25;
+      player.money -= player.troopCost;
+      player.manpower -= 3;
+      player.troopsBought += 1;
     }
   }
 }
