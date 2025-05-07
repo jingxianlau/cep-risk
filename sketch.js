@@ -455,12 +455,19 @@ function mouseReleased() {
     fromTile.colour = 'white';
   }
 
+  let adjacentOwnedByAttacker = conn[to].filter(
+    loc => territories[loc].faction === currentPlayer
+  ).length;
+  let totalAdjacent = conn[to].length;
+  let attackerAdvantage = adjacentOwnedByAttacker / totalAdjacent >= 0.5;
+
   if (toTile.troops === 0 || toTile.faction === currentPlayer) {
     if (toTile.faction === null) toTile.faction = currentPlayer;
     toTile.troops++;
     toTile.colour = fac !== null ? players[fac].color : 'white';
   } else {
-    if (random() < 0.5) {
+    let winChance = attackerAdvantage ? 0.60 : 0.5;
+    if (random() < winChance) {
       toTile.troops--;
       if (toTile.troops === 0) {
         toTile.faction = currentPlayer;
