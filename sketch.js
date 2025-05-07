@@ -135,7 +135,7 @@ function reloadTerritoryMenu() {
       t.faction === currentPlayer
         ? `
             <div style='height: 7px'></div>
-            <i>[B] Deploy Troop ($150)</i>
+            <i>[B] Deploy Troop ($${players[currentPlayer].troopCost})</i>
           `
         : ''
     }
@@ -150,28 +150,32 @@ function initPlayers() {
       color: color(255, 0, 0),
       money: 100,
       polSupport: 0.5,
-      manpower: 3
+      manpower: 3,
+      troopCost: 150
     },
     {
       name: 'Green Guerrillas',
       color: color(0, 200, 0),
       money: 100,
       polSupport: 0.5,
-      manpower: 0
+      manpower: 0,
+      troopCost: 150
     },
     {
       name: 'Blue Bloc',
       color: color(0, 0, 255),
       money: 100,
       polSupport: 0.5,
-      manpower: 0
+      manpower: 0,
+      troopCost: 150
     },
     {
       name: 'Beige Brigadiers',
       color: color(210, 180, 140),
       money: 100,
       polSupport: 0.5,
-      manpower: 0
+      manpower: 0,
+      troopCost: 150
     }
   ];
 
@@ -339,8 +343,9 @@ function keyPressed() {
       player.manpower > 2
     ) {
       territories[hovered].troops += 1;
-      player.money -= 150;
-      player.manpower -= 3;
+      player.money -= player.troopCost;
+      player.troopCost += 25;
+      player.manpower--;
     }
   }
 }
@@ -455,12 +460,19 @@ function mouseReleased() {
     fromTile.colour = 'white';
   }
 
+  let adjacentOwnedByAttacker = conn[to].filter(
+    loc => territories[loc].faction === currentPlayer
+  ).length;
+  let totalAdjacent = conn[to].length;
+  let attackerAdvantage = adjacentOwnedByAttacker / totalAdjacent >= 0.5;
+
   if (toTile.troops === 0 || toTile.faction === currentPlayer) {
     if (toTile.faction === null) toTile.faction = currentPlayer;
     toTile.troops++;
     toTile.colour = fac !== null ? players[fac].color : 'white';
   } else {
-    if (random() < 0.5) {
+    let winChance = attackerAdvantage ? 0.6 : 0.5;
+    if (random() < winChance) {
       toTile.troops--;
       if (toTile.troops === 0) {
         toTile.faction = currentPlayer;
