@@ -7,6 +7,7 @@ let draggingPawn = null;
 let previewTarget = null;
 let gameOver = false;
 let pawnImg;
+let territoryMenu;
 
 // Dice and Events
 let rollingDice = false;
@@ -46,6 +47,14 @@ function preload() {
 
 function setup() {
   createCanvas(doc.clientWidth, doc.clientHeight);
+  territoryMenu = createDiv('');
+  territoryMenu.style('position', 'absolute');
+  territoryMenu.style('background', 'rgba(0, 0, 0, 0.8)');
+  territoryMenu.style('color', 'white');
+  territoryMenu.style('padding', '10px');
+  territoryMenu.style('border-radius', '5px');
+  territoryMenu.style('display', 'none');
+  territoryMenu.style('pointer-events', 'none');
 
   window.addEventListener('keydown', e => {
     if (e.key === ' ' && e.target === document.body) {
@@ -63,6 +72,17 @@ function setup() {
       }
 
       hovered = e.id - 1;
+      const t = territories[hovered];
+    territoryMenu.html(`
+      <strong>Faction:</strong> ${t.faction !== null ? players[t.faction].name : 'Neutral'}<br>
+      <strong>Troops:</strong> ${t.troops}<br>
+      <strong>Revenue:</strong> $${t.revenue || 0}<br>
+      <strong>Support:</strong> ${(t.support * 100).toFixed(1)}%<br>
+      ${t.faction === currentPlayer ? '<strong>Press B to build a troop</strong>' : ''}
+    `);
+    territoryMenu.style('display', 'block');
+    territoryMenu.position(mouseX + 10, mouseY + 10);
+      
     };
     e.onmouseleave = () => {
       e.classList.remove('in');
@@ -81,6 +101,7 @@ function setup() {
       e.style.cursor = 'default';
 
       hovered = null;
+      territoryMenu.style('display', 'none');
     };
     e.onmouseup = () => {
       e.style.cursor = 'pointer';
@@ -96,7 +117,7 @@ function initPlayers() {
       color: color(255, 0, 0),
       money: 100,
       polSupport: 0.5,
-      manpower: 0
+      manpower: 3
     },
     {
       name: 'Green Guerrillas',
@@ -256,6 +277,9 @@ function drawUI() {
   text('🎲', doc.clientWidth - 120, 40);
   textSize(20);
   text(rollingDice ? '...' : 5 - moveCount, doc.clientWidth - 80, 40);
+
+
+
 }
 
 function keyPressed() {
@@ -275,33 +299,14 @@ function keyPressed() {
   //   rollingDice = true;
   //   rolledDice = true;
   // }
-  if (key === 'b') {
-    // let player = players[currentPlayer];
-    // if (player.money >= 5 && player.manpower > 0) {
-    //   player.money -= 5;
-    //   player.manpower--;
-    //   let ownedTiles = [];
-    //   let maxSoldiers = 0;
-    //   for (let y = 0; y < gridSize; y++) {
-    //     for (let x = 0; x < gridSize; x++) {
-    //       let tile = grid[y][x];
-    //       if (tile.faction === currentPlayer) {
-    //         if (tile.troops > maxSoldiers) {
-    //           maxSoldiers = tile.troops;
-    //           ownedTiles = [{ x, y }];
-    //         } else if (tile.troops === maxSoldiers) {
-    //           ownedTiles.push({ x, y });
-    //         }
-    //       }
-    //     }
-    //   }
-    //   if (ownedTiles.length > 0) {
-    //     let chosen = random(ownedTiles);
-    //     grid[chosen.y][chosen.x].troops++;
-    //   } else {
-    //     alert('No controlled tiles to place a troop!');
-    //   }
-    // }
+  if (key === 'b' && !gameOver && territories[hovered].faction === currentPlayer) {
+    console.log(territories[hovered].faction);
+    const player = players[currentPlayer]; 
+    if (territories[hovered].troops > 0 && player.money >= 5 && player.manpower > 0) {
+      territories[hovered].troops += 1;
+      player.money -= 5; 
+      player.manpower -= 1; 
+    }
   }
 }
 
@@ -448,6 +453,9 @@ function mouseMoved() {
     return;
   }
   previewTarget = hovered;
+  if (territoryMenu.style('display') === 'block') {
+    territoryMenu.position(mouseX + 10, mouseY + 10);
+  }
 }
 
 function windowResized() {
