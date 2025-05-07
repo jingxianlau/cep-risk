@@ -40,7 +40,7 @@ function preload() {
   bgDiv.html(bg);
   mapDiv.html(map);
   doc = document.getElementById('ussr-map');
-  pawnImg = loadImage('pawn.svg');
+  pawnImg = loadImage('assets/pawn.svg');
 }
 
 function setup() {
