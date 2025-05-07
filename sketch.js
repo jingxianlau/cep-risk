@@ -40,9 +40,7 @@ function preload() {
   bgDiv.html(bg);
   mapDiv.html(map);
   doc = document.getElementById('ussr-map');
-  pawnImg = loadImage(
-    'https://upload.wikimedia.org/wikipedia/commons/4/45/Chess_plt45.svg'
-  );
+  pawnImg = loadImage('pawn.svg');
 }
 
 function setup() {
@@ -284,10 +282,7 @@ function drawPawns(t) {
 
   if (t.faction !== null) {
     fill(0);
-    // textAlign(LEFT, TOP);
     calcRevenue(t);
-    // textAlign(CENTER, CENTER);
-    // text((t.revenue < 0 ? '-$' : '$') + abs(t.revenue), centerX, centerY - 30);
 
     fill('#222');
     noStroke();
@@ -322,7 +317,6 @@ function drawUI() {
 
 function keyPressed() {
   if (key === ' ' && !gameOver) {
-    const player = players[currentPlayer];
     moveCount = 0;
     currentPlayer = (currentPlayer + 1) % players.length;
     const event = random(events);
@@ -333,10 +327,6 @@ function keyPressed() {
     manpowergain();
     rolledDice = false;
   }
-  // if (key === 'r' && !rollingDice && !rolledDice && !gameOver) {
-  //   rollingDice = true;
-  //   rolledDice = true;
-  // }
   if (
     key === 'b' &&
     !gameOver &&
@@ -353,15 +343,6 @@ function keyPressed() {
       player.manpower -= 1;
     }
   }
-}
-
-function keyReleased() {
-  // if (key === 'r' && rollingDice) {
-  //   rollingDice = false;
-  //   let extraMoves = floor(random(1, 7));
-  //   moveCount = -extraMoves;
-  //   console.log(extraMoves);
-  // }
 }
 
 function payout() {

@@ -11,8 +11,4 @@ class Territory {
     this.econ = econ;
     this.colour = 'white';
   }
-
-  // function invade(fromPlayer) {
-  //   this.faction
-  // }
 }
