@@ -7,7 +7,7 @@ class Territory {
     this.troops = 2;
     this.support = 0.5;
     this.revenue = 0;
-    this.manpower = 3;
+    this.manpower = 1;
     this.econ = econ;
     this.colour = 'white';
   }
