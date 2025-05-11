@@ -9,12 +9,12 @@
 }
 
 #ussr-map path.tint {
-  filter: brightness(90%);
+  filter: brightness(80%);
   stroke-width: 0.5;
 }
 
 #ussr-map path.in {
-  filter: brightness(80%);
+  filter: brightness(75%);
 }
 
 #ussr-map {

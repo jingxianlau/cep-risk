@@ -1,5 +1,6 @@
 let bgDiv, mapDiv, doc;
 let players = [];
+let alive = [];
 let currentPlayer = 0;
 let moveCount = 0;
 let hovered = null;
@@ -193,11 +194,11 @@ function initPlayers() {
       ? players[territories[32].faction].color
       : 'white';
 
-  territories[35].faction = 2;
-  territories[35].troops = 5;
-  territories[35].colour =
-    territories[35].faction !== null
-      ? players[territories[35].faction].color
+  territories[29].faction = 2;
+  territories[29].troops = 5;
+  territories[29].colour =
+    territories[29].faction !== null
+      ? players[territories[29].faction].color
       : 'white';
 
   territories[12].faction = 3;
@@ -322,11 +323,13 @@ function drawUI() {
 function keyPressed() {
   if (key === ' ' && !gameOver) {
     moveCount = 0;
-    currentPlayer = (currentPlayer + 1) % players.length;
+    checkVictory();
+    do {
+      currentPlayer = (currentPlayer + 1) % players.length;
+    } while (!alive.includes(currentPlayer));
     const event = random(events);
     currentEvent = event.text;
     event.effect(currentPlayer);
-    checkVictory();
     payout();
     manpowergain();
     rolledDice = false;
@@ -344,7 +347,7 @@ function keyPressed() {
     ) {
       territories[hovered].troops += 1;
       player.money -= player.troopCost;
-      player.troopCost += 25;
+      player.troopCost += 10;
       player.manpower--;
     }
   }
@@ -393,20 +396,16 @@ function isAdjacent(a, b) {
 }
 
 function checkVictory() {
-  // CHANGE AT SOME POINT IN LIFE
-  // let alive = new Set();
-  // for (let row of grid) {
-  //   for (let tile of row) {
-  //     if (tile.troops > 0 && tile.faction !== null) {
-  //       alive.add(tile.faction);
-  //     }
-  //   }
-  // }
-  // if (alive.size === 1) {
-  //   gameOver = true;
-  //   let winner = Array.from(alive)[0];
-  //   alert(`${players[winner].name} has won the revolution!`);
-  // }
+  alive = [];
+  for (let t of territories) {
+    if (t.troops > 0 && t.faction !== null) {
+      alive.push(t.faction);
+    }
+  }
+  if (alive.length === 1) {
+    gameOver = true;
+    alert(`${players[alive[0]].name} has won the revolution!`);
+  }
 }
 
 function mousePressed() {
