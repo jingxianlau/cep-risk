@@ -28,12 +28,20 @@ let events = [
     effect: p => (p.polSupport += 0.40)
   },
   { text: 'Black market arms deal! +3000 money', effect: p => (p.money += 3000) },
-  { text: 'Economic downturn. -2000 money', effect: p => (p.money -= 2000) },
+  { text: 'Economic downturn. -700 money', effect: p => (p.money -= 700) },
   {
-    text: 'Community outreach success. +2 support',
-    effect: p => (p.polSupport += 0.02)
+    text: 'Community outreach success. +20 support',
+    effect: p => (p.polSupport += 0.20)
   }
 ];
+let lateEvent = [
+  { text: 'Government subsidy received! +10000 money', effect: p => (p.money += 10000) },
+  { text: " Corruption scandal! -50 support", effect: p => (p.polSupport -= 0.50) },
+  { text: 'Mass protest backs you! +50 support', effect: p => (p.polSupport += 0.50) },
+  { text: 'Black market arms deal! +20000 money', effect: p => (p.money += 20000) },
+  { text: 'Economic downturn. -1000 money', effect: p => (p.money -= 7000) },
+ 
+]
 
 function preload() {
   bgDiv = createDiv('');
@@ -152,7 +160,8 @@ function initPlayers() {
       money: 100,
       polSupport: 0.5,
       manpower: 0,
-      troopCost: 150
+      troopCost: 150,
+      turnsAfterEvent: 0
     },
     {
       name: 'Green Guerrillas',
@@ -160,7 +169,8 @@ function initPlayers() {
       money: 100,
       polSupport: 0.5,
       manpower: 0,
-      troopCost: 150
+      troopCost: 150,
+      turnsAfterEvent: 0
     },
     {
       name: 'Blue Bloc',
@@ -168,7 +178,8 @@ function initPlayers() {
       money: 100,
       polSupport: 0.5,
       manpower: 0,
-      troopCost: 150
+      troopCost: 150,
+      turnsAfterEvent: 0
     },
     {
       name: 'Beige Brigadiers',
@@ -176,7 +187,8 @@ function initPlayers() {
       money: 100,
       polSupport: 0.5,
       manpower: 0,
-      troopCost: 150
+      troopCost: 150,
+      turnsAfterEvent: 0
     }
   ];
 
@@ -324,13 +336,27 @@ function keyPressed() {
   if (key === ' ' && !gameOver) {
     moveCount = 0;
     checkVictory();
+    for (let t of territories) {
+      if (t.faction !== null && players[t.faction].turnsAfterEvent == 3) {
+      players[t.faction].polSupport = 0.5;
+      let rawSupport = 0.2 + players[t.faction].polSupport - 0.02 * t.troops;
+      t.support = constrain(rawSupport, -1, 1); // Reset support using rawSupport calculation
+      players[t.faction].turnsAfterEvent = 0;
+      }
+    }
     do {
       currentPlayer = (currentPlayer + 1) % players.length;
     } while (!alive.includes(currentPlayer));
     const event = random(events);
+    if (currentPlayer.money > 5000) {
+    currentEvent = lateEvent.text;
+    lateEvent.effect(players[currentPlayer]);
+  } else {
     currentEvent = event.text;
-    event.effect(currentPlayer);
-    payout();
+    event.effect(players[currentPlayer]);
+  }
+   players[currentPlayer].turnsAfterEvent++;  
+   payout();
     manpowergain();
     rolledDice = false;
   }
@@ -343,12 +369,17 @@ function keyPressed() {
     if (
       territories[hovered].troops > 0 &&
       player.money >= player.troopCost &&
-      player.manpower
+      player.manpower > 0 
     ) {
-      territories[hovered].troops += 1;
-      player.money -= player.troopCost;
-      player.troopCost += 10;
-      player.manpower--;
+      if (player.money > 5000 && player.manpower >= 2) {
+        player.manpower -= 2;
+        territories[hovered].troops += 1;
+        player.money -= player.troopCost;
+      } else {
+        territories[hovered].troops += 1;
+        player.money -= player.troopCost;
+        player.manpower--;
+      }
     }
   }
 }
