@@ -151,7 +151,7 @@ function initPlayers() {
       color: color(255, 0, 0),
       money: 100,
       polSupport: 0.5,
-      manpower: 3,
+      manpower: 0,
       troopCost: 150
     },
     {
@@ -399,12 +399,20 @@ function checkVictory() {
   alive = [];
   for (let t of territories) {
     if (t.troops > 0 && t.faction !== null) {
-      alive.push(t.faction);
+      if (!alive.includes(t.faction)) {
+        alive.push(t.faction);
+      }
     }
   }
-  if (alive.length === 1) {
+  console.log(alive.length);
+  if (alive.length == 1) {
     gameOver = true;
     alert(`${players[alive[0]].name} has won the revolution!`);
+  }
+  if (gameOver == true) {
+    alert(`${players[alive[0]].name} has won the revolution!`);
+    alert('Reload the page to play again.')
+    rolledDice = true;
   }
 }
 
@@ -477,7 +485,6 @@ function mouseReleased() {
         toTile.faction = currentPlayer;
         toTile.troops = 1;
         toTile.support = 0.75 * (1 - toTile.support);
-        console.log(fac);
         toTile.colour = fac !== null ? players[fac].color : 'white';
       }
     }
