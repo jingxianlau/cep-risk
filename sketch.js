@@ -16,19 +16,19 @@ let rolledDice = false;
 let currentEvent = '';
 let events = [
   {
-    text: 'Government subsidy received! +5 money',
-    effect: p => (p.money += 5)
+    text: 'Government subsidy received! +5000 money',
+    effect: p => (p.money += 5000)
   },
   {
-    text: 'Corruption scandal! -3 support',
-    effect: p => (p.polSupport -= 0.03)
+    text: 'Corruption scandal! -30 support',
+    effect: p => (p.polSupport -= 0.30)
   },
   {
-    text: 'Mass protest backs you! +4 support',
-    effect: p => (p.polSupport += 0.04)
+    text: 'Mass protest backs you! +40 support',
+    effect: p => (p.polSupport += 0.40)
   },
-  { text: 'Black market arms deal! +3 money', effect: p => (p.money += 3) },
-  { text: 'Economic downturn. -2 money', effect: p => (p.money -= 2) },
+  { text: 'Black market arms deal! +3000 money', effect: p => (p.money += 3000) },
+  { text: 'Economic downturn. -2000 money', effect: p => (p.money -= 2000) },
   {
     text: 'Community outreach success. +2 support',
     effect: p => (p.polSupport += 0.02)
