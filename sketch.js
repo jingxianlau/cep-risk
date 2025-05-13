@@ -39,7 +39,7 @@ let lateEvent = [
   { text: " Corruption scandal! -50 support", effect: p => (p.polSupport -= 0.50) },
   { text: 'Mass protest backs you! +50 support', effect: p => (p.polSupport += 0.50) },
   { text: 'Black market arms deal! +20000 money', effect: p => (p.money += 20000) },
-  { text: 'Economic downturn. -1000 money', effect: p => (p.money -= 7000) },
+  { text: 'Economic downturn. -10000 money', effect: p => (p.money -= 10000) },
  
 ]
 
