@@ -375,9 +375,11 @@ function keyPressed() {
         player.manpower -= 2;
         territories[hovered].troops += 1;
         player.money -= player.troopCost;
+        player.troopCost += 50;
       } else {
         territories[hovered].troops += 1;
         player.money -= player.troopCost;
+        player.troopCost += 50;
         player.manpower--;
       }
     }
