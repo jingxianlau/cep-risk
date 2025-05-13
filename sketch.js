@@ -28,7 +28,7 @@ let events = [
     effect: p => (p.polSupport += 0.40)
   },
   { text: 'Black market arms deal! +3000 money', effect: p => (p.money += 3000) },
-  { text: 'Economic downturn. -700 money', effect: p => (p.money -= 700) },
+  { text: 'Economic downturn. -500 money', effect: p => (p.money -= 500) },
   {
     text: 'Community outreach success. +20 support',
     effect: p => (p.polSupport += 0.20)
@@ -375,11 +375,11 @@ function keyPressed() {
         player.manpower -= 2;
         territories[hovered].troops += 1;
         player.money -= player.troopCost;
-        player.troopCost += 50;
+        player.troopCost += 25;
       } else {
         territories[hovered].troops += 1;
         player.money -= player.troopCost;
-        player.troopCost += 50;
+        player.troopCost += 25;
         player.manpower--;
       }
     }
